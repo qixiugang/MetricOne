@@ -1,0 +1,13 @@
+?start: metric
+metric: NAME "=" expr
+?expr: term ("+" term)*
+?term: factor ("*" factor)*
+?factor: NUMBER -> number
+      | NAME   -> identifier
+      | "(" expr ")"
+
+NAME: /[A-Z_][A-Z0-9_]*/
+NUMBER: /[0-9]+(\.[0-9]+)?/
+
+%import common.WS
+%ignore WS

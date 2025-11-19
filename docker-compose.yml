@@ -1,0 +1,60 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: metricone-db
+    environment:
+      POSTGRES_USER: metricone
+      POSTGRES_PASSWORD: metricone
+      POSTGRES_DB: metricone
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: metricone-redis
+    ports:
+      - "6379:6379"
+
+  minio:
+    image: minio/minio:RELEASE.2024-04-06T05-26-02Z
+    container_name: metricone-minio
+    command: server /data --console-address :9090
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    volumes:
+      - minio_data:/data
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: metricone-api
+    env_file: .env
+    depends_on:
+      - db
+      - redis
+      - minio
+    ports:
+      - "8000:8000"
+
+  celery:
+    build:
+      context: .
+    container_name: metricone-celery
+    command: celery -A app.core.celery_app.celery_app worker -l info
+    env_file: .env
+    depends_on:
+      - db
+      - redis
+
+volumes:
+  postgres_data:
+  minio_data:

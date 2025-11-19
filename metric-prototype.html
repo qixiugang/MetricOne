@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>指标管理系统原型</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    }
+
+    body {
+      background-color: #f3f4f6;
+      color: #111827;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .layout {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px;
+      background: #111827;
+      color: #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      padding: 16px 0;
+    }
+
+    .sidebar-header {
+      padding: 0 20px 16px;
+      border-bottom: 1px solid rgba(55,65,81,0.8);
+      margin-bottom: 8px;
+    }
+
+    .sidebar-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .sidebar-env {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+
+    .nav {
+      flex: 1;
+      overflow-y: auto;
+      padding-top: 8px;
+    }
+
+    .nav-section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #6b7280;
+      padding: 8px 20px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      padding: 8px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .nav-item span.icon {
+      display: inline-block;
+      width: 18px;
+      margin-right: 8px;
+      text-align: center;
+      opacity: 0.8;
+    }
+
+    .nav-item.active,
+    .nav-item:hover {
+      background: #1f2937;
+      color: #f9fafb;
+    }
+
+    .sidebar-footer {
+      padding: 12px 20px;
+      border-top: 1px solid rgba(55,65,81,0.8);
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    /* Main */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .topbar {
+      height: 56px;
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+
+    .topbar-left {
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    .badge {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #4f46e5;
+    }
+
+    .avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: #4b5563;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #e5e7eb;
+      font-size: 13px;
+    }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px 32px;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .page-subtitle {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 12px;
+      font-size: 13px;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+
+    .btn-primary {
+      background: #4f46e5;
+      color: #ffffff;
+      border-color: #4f46e5;
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 8px 14px rgba(79,70,229,0.35);
+    }
+
+    .btn + .btn {
+      margin-left: 8px;
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 12px;
+      border-radius: 999px;
+    }
+
+    .btn-icon {
+      font-size: 16px;
+      margin-right: 4px;
+    }
+
+    /* Cards / Layout */
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @media (max-width: 1200px) {
+      .grid-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .layout {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        height: auto;
+        flex-direction: row;
+        overflow-x: auto;
+      }
+
+      .main {
+        height: calc(100vh - 64px);
+      }
+
+      .grid-4,
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 14px 16px;
+      box-shadow: 0 1px 3px rgba(15,23,42,0.08);
+      border: 1px solid #e5e7eb;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .card-value {
+      font-size: 20px;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .card-sub {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead {
+      background: #f9fafb;
+    }
+
+    th, td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th {
+      font-weight: 500;
+      color: #6b7280;
+      font-size: 12px;
+    }
+
+    tr:hover td {
+      background: #f9fafb;
+    }
+
+    .tag {
+      display: inline-flex;
+      padding: 2px 8px;
+      font-size: 11px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #4f46e5;
+    }
+
+    .tag-danger {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .tag-success {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .tag-muted {
+      background: #e5e7eb;
+      color: #4b5563;
+    }
+
+    /* Forms */
+    .form-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .form-field {
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 6px 8px;
+      font-size: 13px;
+      border-radius: 6px;
+      border: 1px solid #d1d5db;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      background: #f9fafb;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 1px rgba(79,70,229,0.35);
+      background: #ffffff;
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .helper-text {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 2px;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 10px;
+      gap: 4px;
+    }
+
+    .tab {
+      padding: 6px 10px;
+      font-size: 13px;
+      border-radius: 999px 999px 0 0;
+      cursor: pointer;
+      color: #6b7280;
+    }
+
+    .tab.active {
+      background: #ffffff;
+      color: #111827;
+      border: 1px solid #e5e7eb;
+      border-bottom-color: #ffffff;
+    }
+
+    .tab-content {
+      padding-top: 8px;
+    }
+
+    .muted {
+      color: #6b7280;
+      font-size: 12px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    /* Stepper */
+    .stepper {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      font-size: 12px;
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .step-circle {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 1px solid #9ca3af;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: #6b7280;
+      background: #f9fafb;
+    }
+
+    .step.active .step-circle {
+      background: #4f46e5;
+      border-color: #4f46e5;
+      color: #ffffff;
+    }
+
+    .step-label {
+      color: #6b7280;
+    }
+
+    .step.active .step-label {
+      color: #111827;
+      font-weight: 500;
+    }
+
+    /* Views */
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">指标管理系统</div>
+      <div class="sidebar-env">Nola Finchley · 内部原型</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">
+        <div class="nav-section-title">总览</div>
+        <div class="nav-item active" data-view="dashboard">
+          <span class="icon">📊</span> Dashboard
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">指标治理</div>
+        <div class="nav-item" data-view="metrics">
+          <span class="icon">🧮</span> 指标列表
+        </div>
+        <div class="nav-item" data-view="metric-detail">
+          <span class="icon">📑</span> 指标详情（示例）
+        </div>
+        <div class="nav-item" data-view="calibers">
+          <span class="icon">🧱</span> 口径库
+        </div>
+         <div class="nav-item" data-view="dimensions">
+          <span class="icon">🏷</span> 维度管理
+        </div>
+        <div class="nav-item" data-view="versions">
+          <span class="icon">🧬</span> 版本管理
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">数据与任务</div>
+        <div class="nav-item" data-view="upload">
+          <span class="icon">📤</span> 数据上传向导
+        </div>
+        <div class="nav-item" data-view="tasks">
+          <span class="icon">⏱</span> 计算任务
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">系统与配置</div>
+
+        <div class="nav-item" data-view="settings">
+          <span class="icon">⚙️</span> 系统与权限
+        </div>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      当前用户：<strong>xiugang qi</strong><br/>
+      <span class="muted">原型仅供产品/设计讨论使用</span>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        指标管理中心 · <span class="badge">Prototype</span>
+      </div>
+      <div class="topbar-right">
+        <span class="muted">环境：DEV</span>
+        <span class="muted">消息 🔔</span>
+        <div class="avatar">QX</div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <section class="content">
+
+      <!-- Dashboard View -->
+      <div class="view active" id="view-dashboard">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Dashboard 总览</div>
+            <div class="page-subtitle">
+              查看当前指标体系的健康度、计算任务与数据接入情况。
+            </div>
+          </div>
+          <div>
+            <button class="btn btn-sm">导出报表</button>
+          </div>
+        </div>
+
+        <div class="grid grid-4">
+          <div class="card">
+            <div class="card-title">已注册指标数</div>
+            <div class="card-value">128</div>
+            <div class="card-sub">含 34 个敏感指标</div>
+          </div>
+          <div class="card">
+            <div class="card-title">活跃版本</div>
+            <div class="card-value">52</div>
+            <div class="card-sub">本周新发布 3 个版本</div>
+          </div>
+          <div class="card">
+            <div class="card-title">昨日计算任务</div>
+            <div class="card-value">86</div>
+            <div class="card-sub">失败 <span class="tag-danger">2</span> 个任务</div>
+          </div>
+          <div class="card">
+            <div class="card-title">最近上传批次</div>
+            <div class="card-value">5</div>
+            <div class="card-sub">1 个在排队处理中</div>
+          </div>
+        </div>
+
+        <div style="height: 16px;"></div>
+
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">近7天任务执行概览</div>
+              <span class="muted">示意区，可接入图表组件</span>
+            </div>
+            <div class="muted">
+              这里可用折线/柱状图展示：每日成功/失败任务数、平均耗时等。
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">最近上传记录</div>
+              <button class="btn btn-sm" onclick="switchView('upload')">新建上传</button>
+            </div>
+            <table>
+              <thead>
+              <tr>
+                <th>批次ID</th>
+                <th>来源</th>
+                <th>文件名</th>
+                <th>状态</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td>B20250101</td>
+                <td>手工上传</td>
+                <td>gmv_2024Q4.csv</td>
+                <td><span class="tag-success">已完成</span></td>
+              </tr>
+              <tr>
+                <td>B20250102</td>
+                <td>API</td>
+                <td>user_growth.json</td>
+                <td><span class="tag-muted">排队中</span></td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metrics View -->
+      <div class="view" id="view-metrics">
+        <div class="page-header">
+          <div>
+            <div class="page-title">指标列表</div>
+            <div class="page-subtitle">
+              统一管理企业指标，支持搜索、筛选和进入详情进行治理。
+            </div>
+          </div>
+          <div>
+            <button class="btn btn-primary btn-sm">
+              <span class="btn-icon">＋</span> 新建指标
+            </button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 12px;">
+          <div class="form-row">
+            <div class="form-field">
+              <div class="form-label">关键词</div>
+              <input class="form-input" placeholder="指标名称 / 编码 / Owner" />
+            </div>
+            <div class="form-field">
+              <div class="form-label">主题域</div>
+              <select class="form-select">
+                <option>全部</option>
+                <option>用户运营</option>
+                <option>交易</option>
+                <option>财务</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <div class="form-label">敏感度</div>
+              <select class="form-select">
+                <option>全部</option>
+                <option>normal</option>
+                <option>confidential</option>
+                <option>secret</option>
+              </select>
+            </div>
+            <div style="display:flex;align-items:flex-end;">
+              <button class="btn btn-sm">搜索</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <table>
+            <thead>
+            <tr>
+              <th>编码</th>
+              <th>名称</th>
+              <th>主题域</th>
+              <th>Owner</th>
+              <th>敏感度</th>
+              <th>当前版本</th>
+              <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr onclick="switchView('metric-detail')" style="cursor:pointer;">
+              <td>M_GMV</td>
+              <td>GMV 总成交额</td>
+              <td>交易</td>
+              <td>李四</td>
+              <td><span class="tag-danger">secret</span></td>
+              <td>v2.0</td>
+              <td><button class="btn btn-sm">查看</button></td>
+            </tr>
+            <tr>
+              <td>M_NEW_USER</td>
+              <td>新增用户数</td>
+              <td>用户运营</td>
+              <td>张三</td>
+              <td><span class="tag">normal</span></td>
+              <td>v1.0</td>
+              <td><button class="btn btn-sm">查看</button></td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Metric Detail View -->
+      <div class="view" id="view-metric-detail">
+        <div class="page-header">
+          <div>
+            <div class="page-title">指标详情 · GMV 总成交额</div>
+            <div class="page-subtitle">
+              示例页面：展示指标基础信息、版本与口径、血缘与示例数据。
+            </div>
+          </div>
+          <div>
+            <button class="btn btn-sm">编辑基础信息</button>
+            <button class="btn btn-primary btn-sm">发布新版本</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 12px;">
+          <div class="form-row">
+            <div class="form-field">
+              <div class="form-label">编码</div>
+              <div>M_GMV</div>
+            </div>
+            <div class="form-field">
+              <div class="form-label">名称</div>
+              <div>GMV 总成交额</div>
+            </div>
+            <div class="form-field">
+              <div class="form-label">主题域</div>
+              <div>交易</div>
+            </div>
+            <div class="form-field">
+              <div class="form-label">Owner</div>
+              <div>李四</div>
+            </div>
+            <div class="form-field">
+              <div class="form-label">敏感度</div>
+              <span class="tag-danger">secret</span>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <div class="form-label">类型 / 单位</div>
+              <div>amount / 元</div>
+            </div>
+            <div class="form-field">
+              <div class="form-label">维度</div>
+              <div>公司/产品/渠道</div>
+            </div>
+            <div class="form-field">
+              <div class="form-label">当前活跃版本</div>
+              <div>v2.0（自 2025-01-01 起生效）</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <div class="form-label">业务描述</div>
+              <div class="muted">
+                平台总成交金额，包含线上与线下，v2 版本起将退款金额从 GMV 中扣除。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="tabs">
+            <div class="tab active" data-tab="metric-basic" data-tab-group="metric">基础信息</div>
+            <div class="tab" data-tab="metric-versions" data-tab-group="metric">版本与口径</div>
+            <div class="tab" data-tab="metric-lineage" data-tab-group="metric">数据血缘</div>
+            <div class="tab" data-tab="metric-sample" data-tab-group="metric">示例指标值</div>
+          </div>
+
+          <div class="tab-content" id="tab-metric-basic">
+            <p class="muted">
+              可补充更多业务说明、适用场景、注意事项等内容。
+            </p>
+          </div>
+
+          <div class="tab-content" id="tab-metric-versions" style="display:none;">
+            <div class="grid grid-2">
+              <div>
+                <div class="card-title" style="margin-bottom:6px;">版本列表</div>
+                <table>
+                  <thead>
+                  <tr>
+                    <th>版本</th>
+                    <th>状态</th>
+                    <th>有效期</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr>
+                    <td>v2.0</td>
+                    <td><span class="tag-success">active</span></td>
+                    <td>2025-01-01 ~</td>
+                  </tr>
+                  <tr>
+                    <td>v1.0</td>
+                    <td><span class="tag-muted">retired</span></td>
+                    <td>2023-01-01 ~ 2024-12-31</td>
+                  </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div>
+                <div class="card-title" style="margin-bottom:6px;">当前版本 v2.0 · 口径配置</div>
+                <ul style="font-size:13px; padding-left:16px; line-height:1.7;">
+                  <li>粒度：按 <span class="pill">公司</span> / <span class="pill">产品</span> / <span class="pill">月</span></li>
+                  <li>口径组合：
+                    <ul style="margin-left:18px;">
+                      <li>CAL_GMV_ONLINE（线上 GMV）</li>
+                      <li>CAL_GMV_OFFLINE（线下 GMV）</li>
+                      <li>CAL_GMV_REFUND（退款扣减）</li>
+                    </ul>
+                  </li>
+                  <li>公式示意（SQL）：
+                    <pre style="background:#f9fafb;border-radius:6px;padding:8px;font-size:12px;overflow-x:auto;">
+SELECT company_id, product_id, period_date,
+       SUM(order_amount - refund_amount) AS gmv
+FROM   dwd_orders
+GROUP BY company_id, product_id, period_date;
+                    </pre>
+                  </li>
+                  <li>
+                    <button class="btn btn-sm">版本对比 v1.0 vs v2.0</button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-content" id="tab-metric-lineage" style="display:none;">
+            <div class="card-title">血缘示意</div>
+            <pre style="background:#f9fafb;border-radius:6px;padding:8px;font-size:12px;overflow-x:auto;">
+源表：
+  ods_orders, ods_refunds
+
+清洗层：
+  dwd_orders (字段清洗、维度映射)
+
+汇总层：
+  dws_gmv_by_company_product_day
+
+指标层：
+  metric_value（metric_version_caliber_id = GMV_v2）
+            </pre>
+          </div>
+
+          <div class="tab-content" id="tab-metric-sample" style="display:none;">
+            <table>
+              <thead>
+              <tr>
+                <th>日期</th>
+                <th>公司</th>
+                <th>产品</th>
+                <th>GMV（元）</th>
+                <th>质量评分</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td>2025-01-01</td>
+                <td>华南分公司</td>
+                <td>A款手机</td>
+                <td>1,234,567.89</td>
+                <td>98</td>
+              </tr>
+              <tr>
+                <td>2025-01-02</td>
+                <td>华南分公司</td>
+                <td>A款手机</td>
+                <td>1,045,200.12</td>
+                <td>97</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Calibers View -->
+      <div class="view" id="view-calibers">
+        <div class="page-header">
+          <div>
+            <div class="page-title">口径库</div>
+            <div class="page-subtitle">
+              管理可复用的指标口径（过滤、聚合、计算等规则）。
+            </div>
+          </div>
+          <div>
+            <button class="btn btn-primary btn-sm">
+              <span class="btn-icon">＋</span> 新建口径
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <table>
+            <thead>
+            <tr>
+              <th>编码</th>
+              <th>名称</th>
+              <th>类别</th>
+              <th>引用指标数</th>
+              <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+              <td>CAL_GMV_ONLINE</td>
+              <td>GMV_线上口径</td>
+              <td>过滤 + 聚合</td>
+              <td>3</td>
+              <td><button class="btn btn-sm">查看</button></td>
+            </tr>
+            <tr>
+              <td>CAL_GMV_REFUND</td>
+              <td>GMV 退款扣减</td>
+              <td>计算</td>
+              <td>1</td>
+              <td><button class="btn btn-sm">查看</button></td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Versions View -->
+      <div class="view" id="view-versions">
+        <div class="page-header">
+          <div>
+            <div class="page-title">指标版本管理</div>
+            <div class="page-subtitle">
+              按版本管理指标的口径和公式，支持生效期控制与版本对比。
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <table>
+            <thead>
+            <tr>
+              <th>指标编码</th>
+              <th>指标名称</th>
+              <th>版本</th>
+              <th>状态</th>
+              <th>生效起</th>
+              <th>生效止</th>
+              <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+              <td>M_GMV</td>
+              <td>GMV 总成交额</td>
+              <td>v2.0</td>
+              <td><span class="tag-success">active</span></td>
+              <td>2025-01-01</td>
+              <td>—</td>
+              <td><button class="btn btn-sm">查看 / 对比</button></td>
+            </tr>
+            <tr>
+              <td>M_GMV</td>
+              <td>GMV 总成交额</td>
+              <td>v1.0</td>
+              <td><span class="tag-muted">retired</span></td>
+              <td>2023-01-01</td>
+              <td>2024-12-31</td>
+              <td><button class="btn btn-sm">对比 v2.0</button></td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Upload Wizard View -->
+      <div class="view" id="view-upload">
+        <div class="page-header">
+          <div>
+            <div class="page-title">数据上传向导</div>
+            <div class="page-subtitle">
+              通过分步向导完成文件上传、字段映射、维度绑定与指标计算触发。
+            </div>
+          </div>
+          <div>
+            <button class="btn btn-sm">上传历史</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="stepper" id="upload-stepper">
+            <div class="step active" data-step="1">
+              <div class="step-circle">1</div>
+              <div class="step-label">上传文件</div>
+            </div>
+            <div class="step" data-step="2">
+              <div class="step-circle">2</div>
+              <div class="step-label">字段与维度映射</div>
+            </div>
+            <div class="step" data-step="3">
+              <div class="step-circle">3</div>
+              <div class="step-label">预览 & 提交</div>
+            </div>
+          </div>
+
+          <!-- Step 1 -->
+          <div id="upload-step-1">
+            <div class="form-row">
+              <div class="form-field">
+                <div class="form-label">数据源类型</div>
+                <select class="form-select">
+                  <option>Excel</option>
+                  <option>CSV</option>
+                  <option>JSON</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <div class="form-label">批次名称</div>
+                <input class="form-input" placeholder="如：GMV_2025Q1 手工导入" />
+              </div>
+            </div>
+            <div style="margin: 12px 0;">
+              <div class="form-label">选择文件</div>
+              <div style="border: 1px dashed #d1d5db; padding: 24px; text-align: center; border-radius: 8px; background:#f9fafb;">
+                拖拽文件到此处，或 <button class="btn btn-sm">点击选择文件</button><br/>
+                <span class="helper-text">支持 .xlsx / .csv / .json</span>
+              </div>
+            </div>
+            <div style="margin-top: 12px; text-align: right;">
+              <button class="btn btn-primary btn-sm" onclick="goUploadStep(2)">下一步：字段映射</button>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div id="upload-step-2" style="display:none;">
+            <div class="card-title" style="margin-bottom:8px;">字段映射与维度绑定</div>
+            <div class="muted" style="margin-bottom:8px;">
+              下表为采样数据（前几行），请将上传字段映射到系统字段与维度。
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <div class="form-label">公司字段映射</div>
+                <select class="form-select">
+                  <option>company_name → dim_company.company_name</option>
+                  <option>company_code → dim_company.company_code</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <div class="form-label">产品字段映射</div>
+                <select class="form-select">
+                  <option>product_name → dim_product.product_name</option>
+                  <option>product_code → dim_product.product_code</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <div class="form-label">渠道字段映射</div>
+                <select class="form-select">
+                  <option>channel_name → dim_channel.channel_name</option>
+                  <option>channel_code → dim_channel.channel_code</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <div class="form-label">金额字段</div>
+                <select class="form-select">
+                  <option>amount</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <div class="form-label">日期字段</div>
+                <select class="form-select">
+                  <option>order_date</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-top: 12px; text-align: right;">
+              <button class="btn btn-sm" onclick="goUploadStep(1)">上一步</button>
+              <button class="btn btn-primary btn-sm" onclick="goUploadStep(3)">下一步：预览与提交</button>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div id="upload-step-3" style="display:none;">
+            <div class="card-title" style="margin-bottom:8px;">预览 & 质量检查</div>
+            <div class="muted" style="margin-bottom:8px;">
+              显示匹配成功/失败行数、异常值统计等。此处为静态示意。
+            </div>
+            <ul style="font-size:13px; line-height:1.7; margin-left:16px;">
+              <li>总行数：10,000</li>
+              <li>成功匹配维度：9,850 行</li>
+              <li>维度匹配失败：150 行（公司名未匹配 / 产品名为空）</li>
+              <li>负数金额：12 行（可设为异常提醒）</li>
+            </ul>
+            <div style="margin-top: 12px;">
+              <div class="form-label">关联指标</div>
+              <select class="form-select">
+                <option>GMV 总成交额（M_GMV）</option>
+                <option>新增用户数（M_NEW_USER）</option>
+              </select>
+              <div class="helper-text">
+                提交后将使用该批数据计算所选指标。
+              </div>
+            </div>
+            <div style="margin-top: 12px; text-align:right;">
+              <button class="btn btn-sm" onclick="goUploadStep(2)">上一步</button>
+              <button class="btn btn-primary btn-sm">提交并触发计算</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tasks View -->
+      <div class="view" id="view-tasks">
+        <div class="page-header">
+          <div>
+            <div class="page-title">计算任务列表</div>
+            <div class="page-subtitle">
+              查看指标计算任务执行情况，可用于排查失败原因、手动重跑等。
+            </div>
+          </div>
+          <div>
+            <button class="btn btn-sm">查看 Airflow</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <table>
+            <thead>
+            <tr>
+              <th>任务ID</th>
+              <th>指标编码</th>
+              <th>版本</th>
+              <th>执行方式</th>
+              <th>状态</th>
+              <th>开始时间</th>
+              <th>耗时</th>
+              <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+              <td>T2025010101</td>
+              <td>M_GMV</td>
+              <td>v2.0</td>
+              <td>全量</td>
+              <td><span class="tag-success">成功</span></td>
+              <td>2025-01-01 00:10</td>
+              <td>32s</td>
+              <td><button class="btn btn-sm">查看日志</button></td>
+            </tr>
+            <tr>
+              <td>T2025010203</td>
+              <td>M_GMV</td>
+              <td>v2.0</td>
+              <td>上传触发</td>
+              <td><span class="tag-danger">失败</span></td>
+              <td>2025-01-02 11:05</td>
+              <td>5s</td>
+              <td>
+                <button class="btn btn-sm">查看日志</button>
+                <button class="btn btn-sm">重试</button>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Dimensions View -->
+      <div class="view" id="view-dimensions">
+        <div class="page-header">
+          <div>
+            <div class="page-title">维度管理</div>
+            <div class="page-subtitle">
+              管理公司、产品、渠道等维度主数据，以及组合维 dim_combo。
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:12px;">
+          <div class="tabs">
+            <div class="tab active" data-tab="dim-company" data-tab-group="dim">公司维度</div>
+            <div class="tab" data-tab="dim-product" data-tab-group="dim">产品维度</div>
+            <div class="tab" data-tab="dim-channel" data-tab-group="dim">渠道维度</div>
+            <div class="tab" data-tab="dim-combo" data-tab-group="dim">组合维度</div>
+          </div>
+
+          <div class="tab-content" id="tab-dim-company">
+            <div class="form-row">
+              <div class="form-field">
+                <div class="form-label">公司名称</div>
+                <input class="form-input" placeholder="支持模糊搜索" />
+              </div>
+              <div class="form-field">
+                <div class="form-label">层级 level</div>
+                <select class="form-select">
+                  <option>全部</option>
+                  <option>1 - 集团</option>
+                  <option>2 - 大区</option>
+                  <option>3 - 子公司</option>
+                </select>
+              </div>
+              <div style="display:flex;align-items:flex-end;">
+                <button class="btn btn-sm">搜索</button>
+              </div>
+            </div>
+            <table>
+              <thead>
+              <tr>
+                <th>company_id</th>
+                <th>company_code</th>
+                <th>company_name</th>
+                <th>level</th>
+                <th>parent_company_id</th>
+                <th>状态</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td>1</td>
+                <td>G001</td>
+                <td>集团总部</td>
+                <td>1</td>
+                <td>—</td>
+                <td><span class="tag-success">active</span></td>
+              </tr>
+              <tr>
+                <td>101</td>
+                <td>HN001</td>
+                <td>华南分公司</td>
+                <td>2</td>
+                <td>1</td>
+                <td><span class="tag-success">active</span></td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="tab-content" id="tab-dim-product" style="display:none;">
+            <table>
+              <thead>
+              <tr>
+                <th>product_id</th>
+                <th>product_code</th>
+                <th>product_name</th>
+                <th>product_type</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td>1</td>
+                <td>P001</td>
+                <td>A款手机</td>
+                <td>硬件</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="tab-content" id="tab-dim-channel" style="display:none;">
+            <table>
+              <thead>
+              <tr>
+                <th>channel_id</th>
+                <th>channel_code</th>
+                <th>channel_name</th>
+                <th>channel_type</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td>1</td>
+                <td>C_ONLINE</td>
+                <td>线上渠道</td>
+                <td>电商</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="tab-content" id="tab-dim-combo" style="display:none;">
+            <table>
+              <thead>
+              <tr>
+                <th>combo_id</th>
+                <th>company_id</th>
+                <th>core_company_id</th>
+                <th>product_id</th>
+                <th>channel_id</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td>5001</td>
+                <td>101</td>
+                <td>1</td>
+                <td>1</td>
+                <td>1</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings View -->
+      <div class="view" id="view-settings">
+        <div class="page-header">
+          <div>
+            <div class="page-title">系统配置与权限</div>
+            <div class="page-subtitle">
+              配置用户、角色、指标敏感度与访问控制策略。
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">用户与角色</div>
+              <button class="btn btn-sm">新建用户</button>
+            </div>
+            <table>
+              <thead>
+              <tr>
+                <th>账号</th>
+                <th>姓名</th>
+                <th>角色</th>
+                <th>状态</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td>xiugang.qi</td>
+                <td>xiugang qi</td>
+                <td>Admin</td>
+                <td><span class="tag-success">启用</span></td>
+              </tr>
+              <tr>
+                <td>zhangsan</td>
+                <td>张三</td>
+                <td>Metric_Owner</td>
+                <td><span class="tag-success">启用</span></td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">指标权限配置（示例）</div>
+            </div>
+            <table>
+              <thead>
+              <tr>
+                <th>指标编码</th>
+                <th>名称</th>
+                <th>敏感度</th>
+                <th>Owner</th>
+                <th>授权角色</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td>M_GMV</td>
+                <td>GMV 总成交额</td>
+                <td><span class="tag-danger">secret</span></td>
+                <td>李四</td>
+                <td>Admin, 财务总监</td>
+              </tr>
+              <tr>
+                <td>M_NEW_USER</td>
+                <td>新增用户数</td>
+                <td><span class="tag">normal</span></td>
+                <td>张三</td>
+                <td>Admin, Metric_Owner, Viewer</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+</div>
+
+<script>
+  // 切换视图
+  function switchView(viewName) {
+    document.querySelectorAll('.view').forEach(function (v) {
+      v.classList.remove('active');
+    });
+    document.getElementById('view-' + viewName).classList.add('active');
+
+    document.querySelectorAll('.nav-item').forEach(function (item) {
+      if (item.getAttribute('data-view') === viewName) {
+        item.classList.add('active');
+      } else {
+        item.classList.remove('active');
+      }
+    });
+  }
+
+  document.querySelectorAll('.nav-item').forEach(function (item) {
+    item.addEventListener('click', function () {
+      var view = this.getAttribute('data-view');
+      if (view) {
+        switchView(view);
+      }
+    });
+  });
+
+  // Tab 切换
+  function setupTabs(groupName) {
+    var tabs = document.querySelectorAll('.tab[data-tab-group="' + groupName + '"]');
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        var target = this.getAttribute('data-tab');
+        tabs.forEach(function (t) {
+          t.classList.remove('active');
+        });
+        this.classList.add('active');
+
+        document.querySelectorAll('.tab-content[id^="tab-' + groupName + '-"]').forEach(function (c) {
+          c.style.display = 'none';
+        });
+
+        var el = document.getElementById('tab-' + target);
+        if (el) {
+          el.style.display = 'block';
+        }
+      });
+    });
+  }
+
+  // 为不同 tab 组做初始化
+  setupTabs('metric');
+  setupTabs('dim');
+
+  // 上传向导
+  function goUploadStep(step) {
+    var total = 3;
+    for (var i = 1; i <= total; i++) {
+      document.getElementById('upload-step-' + i).style.display = i === step ? 'block' : 'none';
+    }
+    document.querySelectorAll('#upload-stepper .step').forEach(function (s) {
+      if (parseInt(s.getAttribute('data-step')) === step) {
+        s.classList.add('active');
+      } else {
+        s.classList.remove('active');
+      }
+    });
+  }
+</script>
+</body>
+</html>
