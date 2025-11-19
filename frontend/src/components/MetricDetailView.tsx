@@ -447,16 +447,20 @@ export function MetricDetailView() {
         <Divider />
         <Typography.Title level={5}>发布新版本</Typography.Title>
         <Form form={newVersionForm} layout="vertical" onFinish={(values) => {
-          const payload = {
-            version: values.version,
-            status: values.status || 'draft',
-            formula_sql: values.formula_sql,
-            grain: toList(values.grain),
-            data_sources: toList(values.data_sources),
-            effective_from: values.effective_range?.[0]?.format('YYYY-MM-DD'),
-            effective_to: values.effective_range?.[1]?.format('YYYY-MM-DD'),
-            notes: values.notes,
-          };
+            if (!values.grain || !values.effective_range) {
+              message.error('请填写必填字段：粒度和生效区间');
+              return;
+            }
+            const payload = {
+              version: values.version,
+              status: values.status || 'draft',
+              formula_sql: values.formula_sql,
+              grain: toList(values.grain) ?? [],
+              data_sources: toList(values.data_sources),
+              effective_from: values.effective_range?.[0]?.format('YYYY-MM-DD'),
+              effective_to: values.effective_range?.[1]?.format('YYYY-MM-DD'),
+              notes: values.notes,
+            };
           createVersion.mutate(payload);
         }}>
           <Form.Item name="version" label="版本号">
