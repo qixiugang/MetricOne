@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Menu } from 'antd';
+import { Menu, Typography } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   DashboardOutlined,
@@ -13,7 +13,7 @@ import {
   SettingOutlined,
 } from '@ant-design/icons';
 
-import { useViewStore, viewKeys } from '@/store/useViewStore';
+import { useViewStore } from '@/store/useViewStore';
 import type { ViewKey } from '@/store/useViewStore';
 
 const iconMap: Record<ViewKey, ReactNode> = {
@@ -40,14 +40,28 @@ const labelMap: Record<ViewKey, string> = {
   system: '系统与权限',
 };
 
+const groupedMenu: { label: string; keys: ViewKey[] }[] = [
+  { label: '总览', keys: ['dashboard'] },
+  { label: '指标治理', keys: ['metric-list', 'metric-detail', 'caliber', 'dimension', 'version'] },
+  { label: '数据与任务', keys: ['upload', 'jobs'] },
+  { label: '系统与配置', keys: ['system'] },
+];
+
 export function SidebarMenu() {
   const { activeView, setActiveView } = useViewStore();
 
-  const items: MenuProps['items'] = viewKeys.map((key) => ({
-    key,
-    icon: iconMap[key],
-    label: labelMap[key],
-  }));
+  const items: MenuProps['items'] = groupedMenu.flatMap((group) => [
+    {
+      type: 'group',
+      label: <Typography.Text style={{ color: '#94a3b8', fontSize: 12 }}>{group.label}</Typography.Text>,
+      key: group.label,
+      children: group.keys.map((key) => ({
+        key,
+        icon: iconMap[key],
+        label: labelMap[key],
+      })),
+    },
+  ]);
 
   return (
     <Menu
