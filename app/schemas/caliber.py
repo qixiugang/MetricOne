@@ -8,10 +8,7 @@ class CaliberBase(BaseModel):
     code: str
     name: str
     category: str
-    expr_dsl: dict[str, Any] | None = None
-    expr_sql: str | None = None
     value_format: str | None = None
-    unit_override: str | None = None
     notes: str | None = None
 
 
@@ -22,10 +19,7 @@ class CaliberCreate(CaliberBase):
 class CaliberUpdate(BaseModel):
     name: str | None = None
     category: str | None = None
-    expr_dsl: dict[str, Any] | None = None
-    expr_sql: str | None = None
     value_format: str | None = None
-    unit_override: str | None = None
     notes: str | None = None
 
 

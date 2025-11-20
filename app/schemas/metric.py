@@ -15,6 +15,7 @@ class MetricVersionBase(BaseModel):
     notes: str | None = None
     effective_from: date | None = None
     effective_to: date | None = None
+    subject_area: str | None = None
 
 
 class MetricVersionCreate(MetricVersionBase):

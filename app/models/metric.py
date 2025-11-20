@@ -4,6 +4,7 @@ from datetime import datetime, date
 from typing import Optional
 
 from sqlalchemy import Date, ForeignKey, JSON, Numeric, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -36,12 +37,13 @@ class MetricVersion(Base):
     metric_id: Mapped[int] = mapped_column(ForeignKey("metric.id", ondelete="CASCADE"))
     version: Mapped[str] = mapped_column(String(16))
     status: Mapped[str] = mapped_column(String(16), default="draft")
+    subject_area: Mapped[Optional[str]] = mapped_column(String(64))
     effective_from: Mapped[date]
     effective_to: Mapped[Optional[date]]
-    grain: Mapped[list[str]] = mapped_column(JSON)
+    grain: Mapped[list[str]] = mapped_column(JSONB)
     formula_sql: Mapped[Optional[str]] = mapped_column(Text())
-    formula_dsl: Mapped[Optional[dict]] = mapped_column(JSON)
-    data_sources: Mapped[Optional[list[str]]] = mapped_column(JSON)
+    formula_dsl: Mapped[Optional[dict]] = mapped_column(JSONB)
+    data_sources: Mapped[Optional[list[str]]] = mapped_column(JSONB)
     notes: Mapped[Optional[str]] = mapped_column(Text())
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
 
@@ -58,10 +60,7 @@ class MetricCaliber(Base):
     code: Mapped[str] = mapped_column(String(64), unique=True)
     name: Mapped[str] = mapped_column(String(255))
     category: Mapped[str] = mapped_column(String(32))
-    expr_dsl: Mapped[Optional[dict]] = mapped_column(JSON)
-    expr_sql: Mapped[Optional[str]] = mapped_column(Text())
     value_format: Mapped[Optional[str]] = mapped_column(String(32))
-    unit_override: Mapped[Optional[str]] = mapped_column(String(64))
     notes: Mapped[Optional[str]] = mapped_column(Text())
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
 
@@ -77,12 +76,10 @@ class MetricVersionCaliber(Base):
     metric_version_id: Mapped[int] = mapped_column(ForeignKey("metric_version.id", ondelete="CASCADE"))
     caliber_id: Mapped[Optional[int]] = mapped_column(ForeignKey("metric_caliber.id", ondelete="SET NULL"))
     status: Mapped[str] = mapped_column(String(16), default="active")
-    effective_from: Mapped[Optional[date]]
-    effective_to: Mapped[Optional[date]]
     order_index: Mapped[int] = mapped_column(default=0)
-    override_expr_dsl: Mapped[Optional[dict]] = mapped_column(JSON)
+    override_expr_dsl: Mapped[Optional[dict]] = mapped_column(JSONB)
     override_expr_sql: Mapped[Optional[str]] = mapped_column(Text())
-    override_data_sources: Mapped[Optional[list[str]]] = mapped_column(JSON)
+    override_data_sources: Mapped[Optional[list[str]]] = mapped_column(JSONB)
     notes: Mapped[Optional[str]] = mapped_column(Text())
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
 

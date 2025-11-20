@@ -39,6 +39,7 @@ const statusColor: Record<string, string> = {
 type VersionFormValues = {
   version?: string;
   status?: string;
+  subject_area?: string;
   formula_sql?: string;
   grain?: string;
   data_sources?: string;
@@ -349,6 +350,7 @@ export function MetricDetailView() {
             const payload = {
               version: values.version,
               status: values.status || 'draft',
+              subject_area: values.subject_area,
               formula_sql: values.formula_sql,
               grain: toList(values.grain) ?? [],
               data_sources: toList(values.data_sources),
@@ -370,6 +372,9 @@ export function MetricDetailView() {
                 { label: '已废弃', value: 'deprecated' },
               ]}
             />
+          </Form.Item>
+          <Form.Item name="subject_area" label="主题域">
+            <Input placeholder="如 交易/用户" />
           </Form.Item>
           <Form.Item name="grain" label="粒度（逗号分隔）" rules={[{ required: true }]}>
             <Input placeholder="company,product,channel" />
@@ -452,7 +457,7 @@ export function MetricDetailView() {
             <Input.TextArea rows={3} />
           </Form.Item>
           <Form.Item name="override_expr_dsl" label="覆盖 DSL(JSON)">
-            <Input.TextArea rows={3} />
+            <Input.TextArea rows={3} placeholder='{"func":"sum","field":"amount"}'/>
           </Form.Item>
           <Form.Item name="override_data_sources" label="覆盖数据源">
             <Input />
@@ -505,7 +510,7 @@ export function MetricDetailView() {
             <Input.TextArea rows={3} />
           </Form.Item>
           <Form.Item name="override_expr_dsl" label="覆盖 DSL(JSON)">
-            <Input.TextArea rows={3} />
+            <Input.TextArea rows={3} placeholder='{"func":"sum","field":"amount"}'/>
           </Form.Item>
           <Form.Item name="override_data_sources" label="覆盖数据源">
             <Input />

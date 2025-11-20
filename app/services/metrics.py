@@ -11,7 +11,7 @@ class MetricService:
     def __init__(self, db: Session):
         self.db = db
 
-    def list_metrics(self, keyword: str | None = None, subject_area: str | None = None, sensitivity: str | None = None) -> list[Metric]:
+    def list_metrics(self, keyword: str | None = None, subject_area: str | None = None, sensitivity: str | None = None):
         query = self.db.query(Metric)
         if keyword:
             pattern = f"%{keyword}%"
@@ -140,6 +140,7 @@ class MetricService:
             metric=metric,
             version=version_label or payload.version or "v1",
             status=payload.status or "draft",
+            subject_area=payload.subject_area,
             effective_from=payload.effective_from,
             effective_to=payload.effective_to,
             grain=payload.grain,

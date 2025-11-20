@@ -144,18 +144,18 @@ export function CaliberManagement() {
       <Form.Item name="category" label="类别" rules={[{ required: true }]}> 
         <Select options={categoryOptions} placeholder="选择类别" />
       </Form.Item>
-      <Form.Item name="expr_sql" label="SQL 表达式"> 
+      {/* <Form.Item name="expr_sql" label="SQL 表达式"> 
         <Input.TextArea rows={3} placeholder="可选" />
-      </Form.Item>
-      <Form.Item name="expr_dsl_text" label="DSL(JSON)"> 
+      </Form.Item> */}
+      {/* <Form.Item name="expr_dsl_text" label="DSL(JSON)"> 
         <Input.TextArea rows={3} placeholder='{"func":"sum","field":"amount"}' />
-      </Form.Item>
+      </Form.Item> */}
       <Form.Item name="value_format" label="值格式"> 
         <Input placeholder="如 percentage / currency" />
       </Form.Item>
-      <Form.Item name="unit_override" label="单位覆盖"> 
+      {/* <Form.Item name="unit_override" label="单位覆盖"> 
         <Input placeholder="如 %" />
-      </Form.Item>
+      </Form.Item> */}
       <Form.Item name="notes" label="备注"> 
         <Input.TextArea rows={2} />
       </Form.Item>
