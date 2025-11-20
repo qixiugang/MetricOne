@@ -85,25 +85,30 @@ export default function App() {
         style={{
           background: '#111936',
           color: '#cbd5f5',
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100vh',
-          position: 'sticky',
-          top: 0,
         }}
       >
-        <div style={{ padding: '24px 24px 12px' }}>
-          <Typography.Title level={4} style={{ color: '#fff', marginBottom: 4 }}>
-            指标管理系统
-          </Typography.Title>
-          <Typography.Text style={{ color: '#93a5ff' }}>Nola Finchley · 内部愿望</Typography.Text>
-        </div>
-        <div style={{ flex: 1, overflow: 'auto' }}>
-          <SidebarMenu />
-        </div>
-        <div style={{ padding: 24, borderTop: '1px solid rgba(148, 163, 255, 0.2)', color: '#cbd5f5' }}>
-          <Typography.Text style={{ color: '#9fb2ff' }}>当前用户：xiugang qi</Typography.Text>
-          <Typography.Paragraph style={{ color: '#7e8bbd', marginBottom: 0 }}>原型仅供产品设计讨论使用</Typography.Paragraph>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: '100vh',
+            position: 'sticky',
+            top: 0,
+          }}
+        >
+          <div style={{ padding: '24px 24px 12px' }}>
+            <Typography.Title level={4} style={{ color: '#fff', marginBottom: 4 }}>
+              指标管理系统
+            </Typography.Title>
+            <Typography.Text style={{ color: '#93a5ff' }}>Nola Finchley · 内部愿望</Typography.Text>
+          </div>
+          <div style={{ flex: 1, overflow: 'auto' }}>
+            <SidebarMenu />
+          </div>
+          <div style={{ padding: 24, borderTop: '1px solid rgba(148, 163, 255, 0.2)', color: '#cbd5f5' }}>
+            <Typography.Text style={{ color: '#9fb2ff' }}>当前用户：xiugang qi</Typography.Text>
+            <Typography.Paragraph style={{ color: '#7e8bbd', marginBottom: 0 }}>原型仅供产品设计讨论使用</Typography.Paragraph>
+          </div>
         </div>
       </Sider>
       <Layout>

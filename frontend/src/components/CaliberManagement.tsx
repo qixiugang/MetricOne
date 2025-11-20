@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Button, Form, Input, Modal, Select, Space, Table, Tag, Typography, message } from 'antd';
+import { Button, Form, Input, Modal, Select, Space, Table, Tag, Typography, message, Popconfirm } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -86,39 +86,63 @@ export function CaliberManagement() {
     },
   });
 
+  const deleteCaliber = useMutation({
+    mutationFn: async (caliberId: number) => {
+      await apiClient.delete(`/calibers/${caliberId}`);
+    },
+    onSuccess: () => {
+      message.success('口径已删除');
+      queryClient.invalidateQueries({ queryKey: ['calibers'] });
+      if (editVisible) {
+        setEditVisible(false);
+        setEditingRecord(null);
+      }
+    },
+  });
+
   const columns: ColumnsType<CaliberItem> = useMemo(
     () => [
       { title: '编码', dataIndex: 'code' },
       { title: '名称', dataIndex: 'name' },
       { title: '类别', dataIndex: 'category', render: (value) => <Tag>{value}</Tag> },
       { title: '值格式', dataIndex: 'value_format', render: (value) => value || '—' },
-      { title: '单位覆盖', dataIndex: 'unit_override', render: (value) => value || '—' },
       {
         title: '操作',
         key: 'actions',
         render: (_, record) => (
-          <Button
-            type="link"
-            onClick={() => {
-              setEditingRecord(record);
-              editForm.setFieldsValue({
-                name: record.name,
-                category: record.category,
-                expr_sql: record.expr_sql || undefined,
-                expr_dsl_text: record.expr_dsl ? JSON.stringify(record.expr_dsl, null, 2) : undefined,
-                value_format: record.value_format || undefined,
-                unit_override: record.unit_override || undefined,
-                notes: record.notes || undefined,
-              });
-              setEditVisible(true);
-            }}
-          >
-            编辑
-          </Button>
+          <Space>
+            <Button
+              type="link"
+              onClick={() => {
+                setEditingRecord(record);
+                editForm.setFieldsValue({
+                  name: record.name,
+                  category: record.category,
+                  expr_sql: record.expr_sql || undefined,
+                  expr_dsl_text: record.expr_dsl ? JSON.stringify(record.expr_dsl, null, 2) : undefined,
+                  value_format: record.value_format || undefined,
+                  unit_override: record.unit_override || undefined,
+                  notes: record.notes || undefined,
+                });
+                setEditVisible(true);
+              }}
+            >
+              编辑
+            </Button>
+            <Popconfirm
+              title="确认删除该口径？"
+              okButtonProps={{ danger: true }}
+              onConfirm={() => deleteCaliber.mutate(record.id)}
+            >
+              <Button type="link" danger loading={deleteCaliber.isPending}>
+                删除
+              </Button>
+            </Popconfirm>
+          </Space>
         ),
       },
     ],
-    [editForm],
+    [deleteCaliber, editForm],
   );
 
   const renderForm = (form: typeof createForm, includeCode = false) => (
@@ -144,18 +168,9 @@ export function CaliberManagement() {
       <Form.Item name="category" label="类别" rules={[{ required: true }]}> 
         <Select options={categoryOptions} placeholder="选择类别" />
       </Form.Item>
-      {/* <Form.Item name="expr_sql" label="SQL 表达式"> 
-        <Input.TextArea rows={3} placeholder="可选" />
-      </Form.Item> */}
-      {/* <Form.Item name="expr_dsl_text" label="DSL(JSON)"> 
-        <Input.TextArea rows={3} placeholder='{"func":"sum","field":"amount"}' />
-      </Form.Item> */}
       <Form.Item name="value_format" label="值格式"> 
         <Input placeholder="如 percentage / currency" />
       </Form.Item>
-      {/* <Form.Item name="unit_override" label="单位覆盖"> 
-        <Input placeholder="如 %" />
-      </Form.Item> */}
       <Form.Item name="notes" label="备注"> 
         <Input.TextArea rows={2} />
       </Form.Item>

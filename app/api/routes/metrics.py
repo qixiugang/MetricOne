@@ -85,6 +85,19 @@ def update_metric_version(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
 
+@router.delete("/{metric_id}/versions/{version_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_metric_version(
+    metric_id: int,
+    version_id: int,
+    service: MetricService = Depends(get_service),
+):
+    try:
+        service.delete_version(metric_id, version_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    return None
+
+
 @router.get(
     "/{metric_id}/versions/{version_id}/calibers",
     response_model=list[VersionCaliberRead],

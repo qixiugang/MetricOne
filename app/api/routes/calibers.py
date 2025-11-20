@@ -32,3 +32,12 @@ def update_caliber(
         return service.update_caliber(caliber_id, payload)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+
+
+@router.delete("/{caliber_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_caliber(caliber_id: int, service: CaliberService = Depends(get_service)) -> None:
+    try:
+        service.delete_caliber(caliber_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    return None

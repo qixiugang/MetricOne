@@ -29,3 +29,10 @@ class CaliberService:
         self.db.commit()
         self.db.refresh(caliber)
         return caliber
+
+    def delete_caliber(self, caliber_id: int) -> None:
+        caliber = self.db.query(MetricCaliber).filter(MetricCaliber.id == caliber_id).first()
+        if not caliber:
+            raise ValueError("Caliber not found")
+        self.db.delete(caliber)
+        self.db.commit()

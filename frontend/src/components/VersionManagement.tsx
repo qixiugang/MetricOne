@@ -1,6 +1,20 @@
 import dayjs from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
-import { Button, Card, Form, Input, Modal, Select, Space, Table, Tag, Typography, message, DatePicker } from 'antd';
+import {
+  Button,
+  Card,
+  Form,
+  Input,
+  Modal,
+  Select,
+  Space,
+  Table,
+  Tag,
+  Typography,
+  message,
+  DatePicker,
+  Popconfirm,
+} from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -64,6 +78,23 @@ export function VersionManagement() {
     },
   });
 
+  const deleteVersion = useMutation({
+    mutationFn: async (versionId: number) => {
+      if (!metricId) throw new Error('缺少指标');
+      await apiClient.delete(`/metrics/${metricId}/versions/${versionId}`);
+    },
+    onSuccess: (_, versionId) => {
+      message.success('版本已删除');
+      if (editingVersion?.id === versionId) {
+        setEditingVersion(null);
+        editForm.resetFields();
+      }
+      setSelectedVersionId(null);
+      refetchVersions();
+      queryClient.invalidateQueries({ queryKey: ['metric-detail', metricId] });
+    },
+  });
+
   const columns: ColumnsType<MetricVersion> = useMemo(
     () => [
       { title: '版本', dataIndex: 'version' },
@@ -105,11 +136,20 @@ export function VersionManagement() {
             >
               编辑
             </Button>
+            <Popconfirm
+              title="确认删除该版本？"
+              okButtonProps={{ danger: true }}
+              onConfirm={() => deleteVersion.mutate(record.id)}
+            >
+              <Button type="link" danger loading={deleteVersion.isPending}>
+                删除
+              </Button>
+            </Popconfirm>
           </Space>
         ),
       },
     ],
-    [editForm, setSelectedVersionId],
+    [deleteVersion, editForm, setSelectedVersionId],
   );
 
   return (

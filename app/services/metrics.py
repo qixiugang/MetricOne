@@ -97,6 +97,17 @@ class MetricService:
         self.db.refresh(version)
         return version
 
+    def delete_version(self, metric_id: int, version_id: int) -> None:
+        version = (
+            self.db.query(MetricVersion)
+            .filter(MetricVersion.metric_id == metric_id, MetricVersion.id == version_id)
+            .first()
+        )
+        if not version:
+            raise ValueError("Metric version not found")
+        self.db.delete(version)
+        self.db.commit()
+
     def summary(self) -> MetricSummary:
         total_metrics = self.db.query(func.count(Metric.id)).scalar() or 0
         sensitive_metrics = (
