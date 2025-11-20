@@ -18,7 +18,6 @@ import {
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Dayjs } from 'dayjs';
 
 import { apiClient } from '@/api/client';
 import {
@@ -43,11 +42,11 @@ type VersionFormValues = {
   formula_sql?: string;
   grain?: string;
   data_sources?: string;
-  effective_range?: [Dayjs, Dayjs];
+  effective_range?: [dayjs.Dayjs, dayjs.Dayjs];
   notes?: string;
 };
 
-interface BindingFormValues {
+type BindingFormValues = {
   caliber_id?: number;
   status?: string;
   order_index?: number;
@@ -55,22 +54,18 @@ interface BindingFormValues {
   override_expr_dsl?: string;
   override_data_sources?: string;
   notes?: string;
-}
-
-const parseDsl = (value?: string) => {
-  if (!value) return undefined;
-  try {
-    return JSON.parse(value);
-  } catch (error) {
-    message.error('DSL JSON 格式不正确');
-    throw error;
-  }
 };
 
 const toList = (value?: string) => (value ? value.split(',').map((item) => item.trim()).filter(Boolean) : undefined);
 
 export function MetricDetailView() {
-  const { selectedMetricId, setActiveView, setSelectedMetricId } = useViewStore();
+  const {
+    selectedMetricId,
+    selectedVersionId,
+    setSelectedMetricId,
+    setSelectedVersionId,
+    setActiveView,
+  } = useViewStore();
   const metricId = selectedMetricId;
   const queryClient = useQueryClient();
 
@@ -81,19 +76,17 @@ export function MetricDetailView() {
   const [newVersionForm] = Form.useForm();
   const [bindingCreateForm] = Form.useForm<BindingFormValues>();
   const [bindingEditForm] = Form.useForm<BindingFormValues>();
-
-  const { data: calibers = [] } = useCalibers();
-
-  const [selectedVersionId, setSelectedVersionId] = useState<number | null>(null);
-  const [expandedRows, setExpandedRows] = useState<number[]>([]);
   const [bindingModalVisible, setBindingModalVisible] = useState(false);
   const [editingBinding, setEditingBinding] = useState<VersionCaliber | null>(null);
 
+  const { data: calibers = [] } = useCalibers();
+
   useEffect(() => {
+    if (!metricId) return;
     if (versions.length && !selectedVersionId) {
       setSelectedVersionId(versions[0].id);
     }
-  }, [versions, selectedVersionId]);
+  }, [versions, selectedVersionId, metricId, setSelectedVersionId]);
 
   useEffect(() => {
     if (!metric) return;
@@ -108,7 +101,7 @@ export function MetricDetailView() {
     });
   }, [metric, basicForm]);
 
-  const currentVersion = versions.find((v) => v.id === (selectedVersionId ?? versions[0]?.id));
+  const currentVersion = versions.find((v) => v.id === selectedVersionId) ?? versions[0];
   const currentVersionId = currentVersion?.id;
 
   const { data: versionCalibers = [], refetch: refetchBindings } = useVersionCalibers(
@@ -141,19 +134,6 @@ export function MetricDetailView() {
       newVersionForm.resetFields();
       refetchVersions();
       queryClient.invalidateQueries({ queryKey: ['metric-list'] });
-    },
-  });
-
-  const updateVersion = useMutation({
-    mutationFn: async ({ versionId, payload }: { versionId: number; payload: Record<string, unknown> }) => {
-      if (!metricId) throw new Error('缺少指标 ID');
-      const { data } = await apiClient.patch(`/metrics/${metricId}/versions/${versionId}`, payload);
-      return data;
-    },
-    onSuccess: () => {
-      message.success('版本信息已更新');
-      refetchVersions();
-      queryClient.invalidateQueries({ queryKey: ['metric-detail', metricId] });
     },
   });
 
@@ -205,48 +185,6 @@ export function MetricDetailView() {
     },
   });
 
-  const versionColumns: ColumnsType<MetricVersion> = useMemo(
-    () => [
-      { title: '版本', dataIndex: 'version' },
-      {
-        title: '状态',
-        dataIndex: 'status',
-        render: (value) => <Tag color={statusColor[value] || 'default'}>{value}</Tag>,
-      },
-      {
-        title: '生效区间',
-        render: (_, record) => `${record.effective_from || '—'} → ${record.effective_to || '—'}`,
-      },
-      {
-        title: '粒度',
-        dataIndex: 'grain',
-        render: (value: string[] | undefined) => (value?.length ? value.join(' / ') : '—'),
-      },
-      {
-        title: '操作',
-        key: 'actions',
-        render: (_, record) => (
-          <Space>
-            <Button type="link" onClick={() => setSelectedVersionId(record.id)}>
-              设为当前
-            </Button>
-            <Button
-              type="link"
-              onClick={() =>
-                setExpandedRows((prev) =>
-                  prev.includes(record.id) ? prev.filter((id) => id !== record.id) : [...prev, record.id],
-                )
-              }
-            >
-              {expandedRows.includes(record.id) ? '收起' : '编辑'}
-            </Button>
-          </Space>
-        ),
-      },
-    ],
-    [expandedRows],
-  );
-
   const bindingColumns: ColumnsType<VersionCaliber> = useMemo(
     () => [
       { title: '顺序', dataIndex: 'order_index' },
@@ -287,76 +225,35 @@ export function MetricDetailView() {
     [bindingEditForm, deleteBinding.isPending],
   );
 
-  const expandedRowRender = (record: MetricVersion) => {
-    const initialValues: VersionFormValues = {
-      version: record.version,
-      status: record.status,
-      formula_sql: record.formula_sql || undefined,
-      grain: record.grain ? record.grain.join(', ') : undefined,
-      data_sources: record.data_sources ? record.data_sources.join(', ') : undefined,
-      notes: record.notes || undefined,
-      effective_range:
-        record.effective_from && record.effective_to
-          ? [dayjs(record.effective_from), dayjs(record.effective_to)]
-          : undefined,
-    };
-
-    return (
-      <Form
-        layout="vertical"
-        initialValues={initialValues}
-        onFinish={(values) => {
-          const payload = {
-            version: values.version,
-            status: values.status,
-            formula_sql: values.formula_sql,
-            grain: toList(values.grain),
-            data_sources: toList(values.data_sources),
-            effective_from: values.effective_range?.[0]?.format('YYYY-MM-DD'),
-            effective_to: values.effective_range?.[1]?.format('YYYY-MM-DD'),
-            notes: values.notes,
-          };
-          updateVersion.mutate({ versionId: record.id, payload });
-        }}
-      >
-        <Space wrap align="start">
-          <Form.Item label="版本号" name="version" style={{ minWidth: 160 }}>
-            <Input />
-          </Form.Item>
-          <Form.Item label="状态" name="status" style={{ minWidth: 180 }}>
-            <Select
-              options={[
-                { label: '草稿', value: 'draft' },
-                { label: '活跃', value: 'active' },
-                { label: '废弃', value: 'deprecated' },
-              ]}
-            />
-          </Form.Item>
-          <Form.Item label="粒度" name="grain" style={{ minWidth: 220 }}>
-            <Input placeholder="company,product" />
-          </Form.Item>
-          <Form.Item label="数据源" name="data_sources" style={{ minWidth: 220 }}>
-            <Input placeholder="dwd_order" />
-          </Form.Item>
-          <Form.Item label="SQL" name="formula_sql" style={{ minWidth: 280 }}>
-            <Input.TextArea rows={2} />
-          </Form.Item>
-          <Form.Item label="生效区间" name="effective_range">
-            <DatePicker.RangePicker />
-          </Form.Item>
-          <Form.Item label="备注" name="notes" style={{ minWidth: 240 }}>
-            <Input.TextArea rows={2} />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit" loading={updateVersion.isPending}>
-              保存
-            </Button>
-          </Form.Item>
-        </Space>
-      </Form>
-    );
-  };
-
+  const versionColumns: ColumnsType<MetricVersion> = useMemo(
+    () => [
+      { title: '版本', dataIndex: 'version' },
+      {
+        title: '状态',
+        dataIndex: 'status',
+        render: (value) => <Tag color={statusColor[value] || 'default'}>{value}</Tag>,
+      },
+      {
+        title: '生效区间',
+        render: (_, record) => `${record.effective_from || '—'} → ${record.effective_to || '—'}`,
+      },
+      {
+        title: '粒度',
+        dataIndex: 'grain',
+        render: (value: string[] | undefined) => (value?.length ? value.join(' / ') : '—'),
+      },
+      {
+        title: '操作',
+        key: 'actions',
+        render: (_, record) => (
+          <Button type="link" onClick={() => setSelectedVersionId(record.id)}>
+            设为当前
+          </Button>
+        ),
+      },
+    ],
+    [setSelectedVersionId],
+  );
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
       <Card
@@ -396,22 +293,22 @@ export function MetricDetailView() {
 
       <Card title="编辑基础信息" bordered={false} style={{ borderRadius: 12 }}>
         <Form form={basicForm} layout="vertical" onFinish={(values) => updateMetric.mutate(values)}>
-          <Form.Item name="name" label="指标名称" rules={[{ required: true }]}> 
+          <Form.Item name="name" label="指标名称" rules={[{ required: true }]}>
             <Input placeholder="如 GMV 总成交额" />
           </Form.Item>
-          <Form.Item name="type" label="指标类型" rules={[{ required: true }]}> 
+          <Form.Item name="type" label="指标类型" rules={[{ required: true }]}>
             <Input placeholder="如 财务/KPI" />
           </Form.Item>
-          <Form.Item name="unit" label="单位"> 
+          <Form.Item name="unit" label="单位">
             <Input placeholder="如 元/百分比" />
           </Form.Item>
-          <Form.Item name="subject_area" label="主题域"> 
+          <Form.Item name="subject_area" label="主题域">
             <Input placeholder="如 交易/用户" />
           </Form.Item>
-          <Form.Item name="owner" label="Owner"> 
+          <Form.Item name="owner" label="Owner">
             <Input placeholder="责任人" />
           </Form.Item>
-          <Form.Item name="sensitivity" label="敏感度"> 
+          <Form.Item name="sensitivity" label="敏感度">
             <Select
               options={[
                 { label: 'normal', value: 'normal' },
@@ -420,7 +317,7 @@ export function MetricDetailView() {
               ]}
             />
           </Form.Item>
-          <Form.Item name="description" label="描述"> 
+          <Form.Item name="description" label="描述">
             <Input.TextArea rows={2} />
           </Form.Item>
           <Form.Item>
@@ -432,23 +329,21 @@ export function MetricDetailView() {
       </Card>
 
       <Card title="版本记录" bordered={false} style={{ borderRadius: 12 }}>
-        <Table<MetricVersion>
-          rowKey="id"
-          columns={versionColumns}
-          dataSource={versions}
-          pagination={false}
-          expandable={{
-            expandedRowKeys: expandedRows,
-            expandedRowRender,
-            onExpand: (expanded, record) =>
-              setExpandedRows((prev) => (expanded ? [...prev, record.id] : prev.filter((id) => id !== record.id))),
-          }}
-        />
+        <Space style={{ marginBottom: 16, justifyContent: 'space-between', width: '100%' }}>
+          <Typography.Text>当前选择：{currentVersion ? currentVersion.version : '—'}</Typography.Text>
+          <Button type="link" onClick={() => setActiveView('version')} disabled={!metricId}>
+            前往版本管理
+          </Button>
+        </Space>
+        <Table<MetricVersion> rowKey="id" columns={versionColumns} dataSource={versions} pagination={false} />
         <Divider />
         <Typography.Title level={5}>发布新版本</Typography.Title>
-        <Form form={newVersionForm} layout="vertical" onFinish={(values) => {
+        <Form
+          form={newVersionForm}
+          layout="vertical"
+          onFinish={(values: VersionFormValues) => {
             if (!values.grain || !values.effective_range) {
-              message.error('请填写必填字段：粒度和生效区间');
+              message.error('请填写粒度和生效区间');
               return;
             }
             const payload = {
@@ -457,28 +352,35 @@ export function MetricDetailView() {
               formula_sql: values.formula_sql,
               grain: toList(values.grain) ?? [],
               data_sources: toList(values.data_sources),
-              effective_from: values.effective_range?.[0]?.format('YYYY-MM-DD'),
-              effective_to: values.effective_range?.[1]?.format('YYYY-MM-DD'),
+              effective_from: values.effective_range[0].format('YYYY-MM-DD'),
+              effective_to: values.effective_range[1].format('YYYY-MM-DD'),
               notes: values.notes,
             };
-          createVersion.mutate(payload);
-        }}>
+            createVersion.mutate(payload);
+          }}
+        >
           <Form.Item name="version" label="版本号">
             <Input placeholder="如 v2" />
           </Form.Item>
           <Form.Item name="status" label="状态">
-            <Select options={[{ label: '草稿', value: 'draft' }, { label: '活跃', value: 'active' }, { label: '废弃', value: 'deprecated' }]} />
+            <Select
+              options={[
+                { label: '草稿', value: 'draft' },
+                { label: '待审批', value: 'pending_review' },
+                { label: '已发布', value: 'published' },
+              ]}
+            />
           </Form.Item>
-          <Form.Item name="grain" label="粒度">
+          <Form.Item name="grain" label="粒度（逗号分隔）" rules={[{ required: true }]}>
             <Input placeholder="company,product,channel" />
           </Form.Item>
-          <Form.Item name="data_sources" label="数据源">
+          <Form.Item name="data_sources" label="数据源（逗号分隔）">
             <Input placeholder="dwd_order,dwd_user" />
           </Form.Item>
-          <Form.Item name="formula_sql" label="SQL">
+          <Form.Item name="formula_sql" label="SQL 公式">
             <Input.TextArea rows={3} />
           </Form.Item>
-          <Form.Item name="effective_range" label="生效区间">
+          <Form.Item name="effective_range" label="生效区间" rules={[{ required: true }]}>
             <DatePicker.RangePicker style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item name="notes" label="备注">
@@ -494,19 +396,16 @@ export function MetricDetailView() {
 
       <Card title="版本口径" bordered={false} style={{ borderRadius: 12 }}>
         <Space style={{ marginBottom: 16 }}>
-          <Typography.Text>
-            当前版本：{currentVersion ? currentVersion.version : '未选择'}
-          </Typography.Text>
-          <Button type="primary" onClick={() => setBindingModalVisible(true)} disabled={!currentVersionId}>
+          <Typography.Text>当前版本：{currentVersion ? currentVersion.version : '未选择'}</Typography.Text>
+          <Button
+            type="primary"
+            onClick={() => setBindingModalVisible(true)}
+            disabled={!currentVersionId}
+          >
             新增口径绑定
           </Button>
         </Space>
-        <Table<VersionCaliber>
-          rowKey="id"
-          dataSource={versionCalibers}
-          pagination={false}
-          columns={bindingColumns}
-        />
+        <Table<VersionCaliber> rowKey="id" columns={bindingColumns} dataSource={versionCalibers} pagination={false} />
       </Card>
 
       <Modal
@@ -525,7 +424,7 @@ export function MetricDetailView() {
               status: values.status || 'active',
               order_index: values.order_index ?? 0,
               override_expr_sql: values.override_expr_sql,
-              override_expr_dsl: parseDsl(values.override_expr_dsl),
+              override_expr_dsl: values.override_expr_dsl ? JSON.parse(values.override_expr_dsl) : undefined,
               override_data_sources: toList(values.override_data_sources),
               notes: values.notes,
             };
@@ -539,7 +438,12 @@ export function MetricDetailView() {
             />
           </Form.Item>
           <Form.Item name="status" label="状态" initialValue="active">
-            <Select options={[{ label: 'active', value: 'active' }, { label: 'inactive', value: 'inactive' }]} />
+            <Select
+              options={[
+                { label: 'active', value: 'active' },
+                { label: 'inactive', value: 'inactive' },
+              ]}
+            />
           </Form.Item>
           <Form.Item name="order_index" label="执行顺序" initialValue={0}>
             <Input type="number" />
@@ -579,7 +483,7 @@ export function MetricDetailView() {
               status: values.status,
               order_index: values.order_index,
               override_expr_sql: values.override_expr_sql,
-              override_expr_dsl: parseDsl(values.override_expr_dsl),
+              override_expr_dsl: values.override_expr_dsl ? JSON.parse(values.override_expr_dsl) : undefined,
               override_data_sources: toList(values.override_data_sources),
               notes: values.notes,
             };
@@ -587,7 +491,12 @@ export function MetricDetailView() {
           }}
         >
           <Form.Item name="status" label="状态">
-            <Select options={[{ label: 'active', value: 'active' }, { label: 'inactive', value: 'inactive' }]} />
+            <Select
+              options={[
+                { label: 'active', value: 'active' },
+                { label: 'inactive', value: 'inactive' },
+              ]}
+            />
           </Form.Item>
           <Form.Item name="order_index" label="执行顺序">
             <Input type="number" />

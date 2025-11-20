@@ -9,6 +9,7 @@ import { MetricDetailView } from '@/components/MetricDetailView';
 import { MetricListTable } from '@/components/MetricListTable';
 import { CaliberManagement } from '@/components/CaliberManagement';
 import { DimensionManagement } from '@/components/DimensionManagement';
+import { VersionManagement } from '@/components/VersionManagement';
 import { useViewStore } from '@/store/useViewStore';
 
 const { Header, Sider, Content } = Layout;
@@ -62,7 +63,7 @@ function ViewRenderer({ view }: { view: string }) {
     case 'dimension':
       return <DimensionManagement />;
     case 'version':
-      return <PlaceholderView title="版本管理" />;
+      return <VersionManagement />;
     case 'upload':
       return <PlaceholderView title="数据上传向导" />;
     case 'jobs':
