@@ -366,8 +366,8 @@ export function MetricDetailView() {
             <Select
               options={[
                 { label: '草稿', value: 'draft' },
-                { label: '待审批', value: 'pending_review' },
-                { label: '已发布', value: 'published' },
+                { label: '已发布', value: 'active' },
+                { label: '已废弃', value: 'deprecated' },
               ]}
             />
           </Form.Item>

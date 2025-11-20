@@ -323,8 +323,8 @@ export function MetricListTable() {
             <Select 
               options={[ 
                 { label: '草稿', value: 'draft' }, 
-                { label: '活跃', value: 'active' }, 
-                { label: '废弃', value: 'deprecated' }, 
+                { label: '已发布', value: 'active' }, 
+                { label: '已废弃', value: 'deprecated' }, 
               ]} 
             />
           </Form.Item>
